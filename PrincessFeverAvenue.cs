@@ -7,7 +7,7 @@ namespace PrincessFeverAvenue
 {
     public class PrincessFeverAvenue : Game
     {
-        private GraphicsDeviceManager _graphics;
+        private readonly GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
 
         Texture2D playerVehicleTexture;
