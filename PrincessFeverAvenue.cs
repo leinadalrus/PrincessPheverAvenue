@@ -2,15 +2,69 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.Collections.Generic;
 
 namespace PrincessFeverAvenue
 {
+    public class IMiddleForwardLayout
+    {
+        Vector2 layoutPosition,
+                layoutDirection;
+
+        public Vector2 Position { get; set; }
+        public Vector2 Direction { get; set; }
+    }
+
+    public class PlayerBox2D
+    {
+        public Vector2 Velocity;
+        public Vector2 Force;
+
+        public Matrix  Yaw;
+        public Vector2 YawVelocityAxis,
+                       YawForce;
+
+        public Single MaxVelocity,
+                      MaxYawVelocity;
+
+        public Single DampingForce,
+                      DampingYawForce;
+
+        public Single InputForce,
+                      InputYawForce;
+
+        public PlayerBox2D()
+        {
+            Velocity = Vector2.Zero;
+            Force = Vector2.Zero;
+
+            Yaw = Matrix.Identity;
+            YawVelocityAxis = Vector2.Zero;
+            YawForce = Vector2.Zero;
+
+            MaxVelocity = 100.0f;
+            MaxYawVelocity = 1.1f;
+
+            DampingForce = 100.0f * 2;
+            DampingYawForce = 1.1f * 2;
+
+            InputForce = 1000.0f;
+            InputYawForce = 1.1f * 2;
+        }
+    }
+
+    public class PlayerVehicle
+    {
+        Vector2 position;
+        Rectangle hitbox;
+    }
+
     public class PrincessFeverAvenue : Game
     {
         private readonly GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
 
-        Texture2D playerVehicleTexture;
+        Texture2D playerVehicleSprite;
         Vector2 playerVehiclePosition;
         Single /* float */ playerVehicleSpeed;
 
@@ -36,7 +90,7 @@ namespace PrincessFeverAvenue
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
             // TODO: use this.Content to load your game content here
-            playerVehicleTexture = Content.Load<Texture2D>("player-vehicle-sprite-idle");
+            playerVehicleSprite = Content.Load<Texture2D>("player-vehicle-sprite-idle");
         }
 
         protected override void Update(GameTime gameTime)
@@ -74,22 +128,22 @@ namespace PrincessFeverAvenue
                         (Single)gameTime.ElapsedGameTime.TotalMilliseconds;
 
 
-            if (playerVehiclePosition.X > _graphics.PreferredBackBufferWidth - playerVehicleTexture.Width / 2)
+            if (playerVehiclePosition.X > _graphics.PreferredBackBufferWidth - playerVehicleSprite.Width / 2)
             {
-                playerVehiclePosition.X = _graphics.PreferredBackBufferWidth - playerVehicleTexture.Width / 2;
+                playerVehiclePosition.X = _graphics.PreferredBackBufferWidth - playerVehicleSprite.Width / 2;
             }
-            else if (playerVehiclePosition.X < playerVehicleTexture.Width / 2)
+            else if (playerVehiclePosition.X < playerVehicleSprite.Width / 2)
             {
-                playerVehiclePosition.X = playerVehicleTexture.Width / 2;
+                playerVehiclePosition.X = playerVehicleSprite.Width / 2;
             }
 
-            if (playerVehiclePosition.Y > _graphics.PreferredBackBufferHeight - playerVehicleTexture.Height / 2)
+            if (playerVehiclePosition.Y > _graphics.PreferredBackBufferHeight - playerVehicleSprite.Height / 2)
             {
-                playerVehiclePosition.Y = _graphics.PreferredBackBufferHeight - playerVehicleTexture.Height / 2;
+                playerVehiclePosition.Y = _graphics.PreferredBackBufferHeight - playerVehicleSprite.Height / 2;
             }
-            else if (playerVehiclePosition.Y < playerVehicleTexture.Height / 2)
+            else if (playerVehiclePosition.Y < playerVehicleSprite.Height / 2)
             {
-                playerVehiclePosition.Y = playerVehicleTexture.Height / 2;
+                playerVehiclePosition.Y = playerVehicleSprite.Height / 2;
             }
 
             base.Update(gameTime);
@@ -101,13 +155,13 @@ namespace PrincessFeverAvenue
 
             // TODO: Add your drawing code here
             _spriteBatch.Begin();
-            _spriteBatch.Draw(playerVehicleTexture,
+            _spriteBatch.Draw(playerVehicleSprite,
                 playerVehiclePosition,
                 null,
                 Color.GhostWhite,
                 0.0f,
-                new Vector2(playerVehicleTexture.Width / 2,
-                            playerVehicleTexture.Height / 2),
+                new Vector2(playerVehicleSprite.Width / 2,
+                            playerVehicleSprite.Height / 2),
                 Vector2.One,
                 SpriteEffects.None,
                 0.0f);
