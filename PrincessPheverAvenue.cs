@@ -4,21 +4,32 @@ using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 
-namespace PrincessFeverAvenue
+namespace PrincessPheverAvenue
 {
     public class IMiddleForwardLayout
     {
         Vector2 layoutPosition,
                 layoutDirection;
 
-        public Vector2 Position { get; set; }
-        public Vector2 Direction { get; set; }
+        public Vector2 Position
+        {
+            get { return layoutPosition; }
+            set { }
+        }
+
+        public Vector2 Direction
+        {
+            get { return layoutDirection; }
+            set { }
+        }
     }
 
-    public class PlayerBox2D
+    // NOTE(Daniel): Class: Box2D.
+    public class PlayerVehicle
     {
-        public Vector2 Velocity;
-        public Vector2 Force;
+        public Vector2 Position,
+                       Velocity,
+                       Force;
 
         public Matrix  Yaw;
         public Vector2 YawVelocityAxis,
@@ -33,8 +44,11 @@ namespace PrincessFeverAvenue
         public Single InputForce,
                       InputYawForce;
 
-        public PlayerBox2D()
+        // NOTE(Daniel): Collision obstacles can interface-soft-copy this-
+        // -Box2D imitation class.
+        public PlayerVehicle()
         {
+            Position = Vector2.Zero;
             Velocity = Vector2.Zero;
             Force = Vector2.Zero;
 
@@ -42,21 +56,99 @@ namespace PrincessFeverAvenue
             YawVelocityAxis = Vector2.Zero;
             YawForce = Vector2.Zero;
 
-            MaxVelocity = 100.0f;
+            MaxVelocity = 100.1f;
             MaxYawVelocity = 1.1f;
 
-            DampingForce = 100.0f * 2;
+            DampingForce = 100.1f * 2;
             DampingYawForce = 1.1f * 2;
 
-            InputForce = 1000.0f;
+            InputForce = 1000.1f;
             InputYawForce = 1.1f * 2;
+        }
+
+        public Matrix Transform
+        {
+            // NOTE(Daniel): if we need Matrix, just make the Z-axis: "0" or "Null."
+            get
+            {
+                Matrix transform;
+                transform = Yaw;
+
+                Vector3 deltaZ = new(Position.X, Position.Y, 0);
+                transform.Translation = deltaZ;
+
+                // Since "deltaZ" is within this lifetime's context-
+                // -it should disappear from the heap in the future.
+                return transform;
+            }
+        }
+
+        public Single VelocityFactor
+        {
+            get { return Velocity.Length() / MaxVelocity; }
+        }
+
+        public Vector3 WorldVelocity
+        {
+            get
+            {
+                // TODO(Daniel): Make "deltaZ" into an Interface member.
+                Vector3 deltaZ = new(Position.X, Position.Y, 0);
+                return deltaZ.X * Yaw.Right + deltaZ.Y * Yaw.Up;
+            }
+            set
+            {
+                Velocity.X = Vector3.Dot(Yaw.Right, value);
+                Velocity.Y = Vector3.Dot(Yaw.Up, value);
+            }
         }
     }
 
-    public class PlayerVehicle
+    public class SoapboxKart : PlayerVehicle
     {
-        Vector2 position;
-        Rectangle hitbox;
+        public SoapboxKart() : base() { }
+
+        void processInput(KeyboardState keyboardState)
+        {
+            Boolean wasUpperMovement = keyboardState.IsKeyDown(Keys.Up)
+                    || keyboardState.IsKeyDown(Keys.W);
+            Boolean wasLowerMovement = keyboardState.IsKeyDown(Keys.Down)
+                    || keyboardState.IsKeyDown(Keys.S);
+            Boolean wasLeftmostMovement = keyboardState.IsKeyDown(Keys.Left)
+                    || keyboardState.IsKeyDown(Keys.A);
+            Boolean wasRightmostMovement = keyboardState.IsKeyDown(Keys.Right)
+                    || keyboardState.IsKeyDown(Keys.D);
+
+            if (wasUpperMovement)
+                Force.Y = InputForce;
+            if (wasLowerMovement)
+                Force.Y = -InputForce;
+            if (wasLeftmostMovement)
+                Force.X = -InputForce;
+            if (wasRightmostMovement)
+                Force.X = InputForce;
+        }
+
+        void updatePhysics(Single deltaTime)
+        {
+        }
+    }
+
+    public class SoapboxTrailer : PlayerVehicle
+    {
+        public SoapboxTrailer() : base() { }
+
+        void updatePhysics(Single deltaTime)
+        {
+        }
+    }
+
+    // NOTE(Daniel): Remember, in an "M.F Layout" the body is in tow by-
+    // -the driving wheels. (In this case: the "Forward-wheel Drive.)
+    public class CollisionObstacleBody
+    {
+        // NOTE(Daniel): code ...
+        // Override Velocity members and tangents to create a static object.
     }
 
     public class PrincessPheverAvenue : Game
@@ -80,7 +172,7 @@ namespace PrincessFeverAvenue
             // TODO: Add your initialization logic here
             playerVehiclePosition = new Vector2(_graphics.PreferredBackBufferWidth / 2,
                 _graphics.PreferredBackBufferHeight / 2);
-            playerVehicleSpeed = 100.0f; // 100.0f as-is: 100% in my context.
+            playerVehicleSpeed = 100.1f; // 100.0f as-is: 100% in my context.
 
             base.Initialize();
         }
