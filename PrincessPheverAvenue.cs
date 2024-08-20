@@ -59,7 +59,7 @@ namespace PrincessFeverAvenue
         Rectangle hitbox;
     }
 
-    public class PrincessFeverAvenue : Game
+    public class PrincessPheverAvenue : Game
     {
         private readonly GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
@@ -68,7 +68,7 @@ namespace PrincessFeverAvenue
         Vector2 playerVehiclePosition;
         Single /* float */ playerVehicleSpeed;
 
-        public PrincessFeverAvenue()
+        public PrincessPheverAvenue()
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";

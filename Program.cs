@@ -1,3 +1,3 @@
 ﻿
-using var game = new PrincessFeverAvenue.PrincessFeverAvenue();
+using var game = new PrincessFeverAvenue.PrincessPheverAvenue();
 game.Run();
