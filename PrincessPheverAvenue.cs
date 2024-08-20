@@ -71,10 +71,9 @@ namespace PrincessPheverAvenue
             // NOTE(Daniel): if we need Matrix, just make the Z-axis: "0" or "Null."
             get
             {
-                Matrix transform;
-                transform = Yaw;
+                var transform = Yaw;
 
-                Vector3 deltaZ = new(Position.X, Position.Y, 0);
+                var deltaZ = new Vector3(Position.X, Position.Y, 0);
                 transform.Translation = deltaZ;
 
                 // Since "deltaZ" is within this lifetime's context-
@@ -93,7 +92,7 @@ namespace PrincessPheverAvenue
             get
             {
                 // TODO(Daniel): Make "deltaZ" into an Interface member.
-                Vector3 deltaZ = new(Position.X, Position.Y, 0);
+                var deltaZ = new Vector3(Position.X, Position.Y, 0);
                 return deltaZ.X * Yaw.Right + deltaZ.Y * Yaw.Up;
             }
             set
@@ -131,6 +130,72 @@ namespace PrincessPheverAvenue
 
         void updatePhysics(Single deltaTime)
         {
+            Velocity += Force * deltaTime;
+
+            if (Force.X > -0.1f && Force.X < 0.1f)
+                if (Velocity.X > 0.0f)
+                    Velocity.X = Math.Max(0.0f, Velocity.X - DampingForce * deltaTime);
+
+            if (Force.Y > -0.1f && Force.Y < 0.1f)
+                if (Velocity.Y > 0)
+                    Velocity.Y = Math.Max(0.0f, Velocity.Y - DampingForce * deltaTime);
+
+            Velocity.X = Math.Min(0.0f, Velocity.X + DampingForce * deltaTime);
+            Velocity.Y = Math.Min(0.0f, Velocity.Y + DampingForce * deltaTime);
+
+            var velocityLength = Velocity.Length();
+            if (velocityLength > MaxVelocity)
+                Velocity = Vector2.Normalize(Velocity) * MaxVelocity;
+
+            var deltaZ = new Vector3(Velocity.X, Velocity.Y, 0);
+
+            deltaZ += Yaw.Right * Velocity.X * deltaTime;
+            deltaZ += Yaw.Up * Velocity.Y * deltaTime;
+
+            YawVelocityAxis += YawForce * deltaTime;
+
+            if (YawForce.X > -0.1 && YawForce.X < 0.1f)
+                if (YawVelocityAxis.X > 0)
+                    YawVelocityAxis.X = Math.Max(0.0f,
+                        YawVelocityAxis.X
+                        - DampingYawForce
+                        * deltaTime);
+
+            if (YawForce.Y > -0.1 && YawForce.Y < 0.1f)
+                if (YawVelocityAxis.Y > 0)
+                    YawVelocityAxis.Y = Math.Max(0.0f,
+                        YawVelocityAxis.Y
+                        - DampingYawForce
+                        * deltaTime);
+
+            YawVelocityAxis.X = Math.Min(0.0f,
+                YawVelocityAxis.X
+                + DampingYawForce
+                * deltaTime);
+
+            YawVelocityAxis.Y = Math.Min(0.0f,
+                YawVelocityAxis.Y
+                + DampingYawForce
+                * deltaTime);
+
+            Single yawVelocityLength = YawVelocityAxis.Length();
+            if (yawVelocityLength > MaxYawVelocity)
+                YawVelocityAxis = Vector2.Normalize(YawVelocityAxis) *
+                    MaxYawVelocity;
+
+            var yawVelocity = Matrix.Identity;
+
+            if (YawVelocityAxis.X < -0.1f || YawVelocityAxis.X > 0.1f)
+                yawVelocity = yawVelocity *
+                    Matrix.CreateFromAxisAngle(Yaw.Right,
+                    YawVelocityAxis.X * deltaTime);
+
+            if (YawVelocityAxis.Y < -0.1f || YawVelocityAxis.Y > 0.1f)
+                yawVelocity = yawVelocity *
+                    Matrix.CreateFromAxisAngle(Yaw.Right,
+                    YawVelocityAxis.Y * deltaTime);
+
+            Yaw *= yawVelocity;
         }
     }
 
