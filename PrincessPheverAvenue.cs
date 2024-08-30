@@ -16,6 +16,7 @@ namespace PrincessPheverAvenue
         private SpriteBatch _spriteBatch;
 
         Texture2D playerVehicleSprite;
+        Rectangle playerVehicleHitbox;
         Vector2 playerVehiclePosition;
         Single /* float */ playerVehicleSpeed;
 
@@ -41,7 +42,7 @@ namespace PrincessPheverAvenue
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
             // TODO: use this.Content to load your game content here
-            playerVehicleSprite = Content.Load<Texture2D>("player-vehicle-sprite-idle");
+            playerVehicleSprite = Content.Load<Texture2D>("Starlight-Spacestar-Idle-Rear");
         }
 
         protected override void Update(GameTime gameTime)
@@ -52,22 +53,22 @@ namespace PrincessPheverAvenue
             // TODO: Add your update logic here
             PlayerController.UpdateController(gameTime, playerVehiclePosition, playerVehicleSpeed);
 
-            if (playerVehiclePosition.X > _graphics.PreferredBackBufferWidth - playerVehicleSprite.Width / 2)
+            if (playerVehicleHitbox.X > _graphics.PreferredBackBufferWidth - playerVehicleSprite.Width / 2)
             {
-                playerVehiclePosition.X = _graphics.PreferredBackBufferWidth - playerVehicleSprite.Width / 2;
+                playerVehicleHitbox.X = _graphics.PreferredBackBufferWidth - playerVehicleSprite.Width / 2;
             }
-            else if (playerVehiclePosition.X < playerVehicleSprite.Width / 2)
+            else if (playerVehicleHitbox.X < playerVehicleSprite.Width / 2)
             {
-                playerVehiclePosition.X = playerVehicleSprite.Width / 2;
+                playerVehicleHitbox.X = playerVehicleSprite.Width / 2;
             }
 
-            if (playerVehiclePosition.Y > _graphics.PreferredBackBufferHeight - playerVehicleSprite.Height / 2)
+            if (playerVehicleHitbox.Y > _graphics.PreferredBackBufferHeight - playerVehicleSprite.Height / 2)
             {
-                playerVehiclePosition.Y = _graphics.PreferredBackBufferHeight - playerVehicleSprite.Height / 2;
+                playerVehicleHitbox.Y = _graphics.PreferredBackBufferHeight - playerVehicleSprite.Height / 2;
             }
-            else if (playerVehiclePosition.Y < playerVehicleSprite.Height / 2)
+            else if (playerVehicleHitbox.Y < playerVehicleSprite.Height / 2)
             {
-                playerVehiclePosition.Y = playerVehicleSprite.Height / 2;
+                playerVehicleHitbox.Y = playerVehicleSprite.Height / 2;
             }
 
             base.Update(gameTime);
