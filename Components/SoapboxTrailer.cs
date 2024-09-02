@@ -1,6 +1,7 @@
 ﻿using System;
+using PrincessPheverAvenue.Models;
 
-namespace PrincessPheverAvenue.Models
+namespace PrincessPheverAvenue.Components
 {
     public class SoapboxTrailer : MiddleForwardVehicle
     {

@@ -1,8 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using PrincessPheverAvenue.Models;
 using System;
 
-namespace PrincessPheverAvenue.Models
+namespace PrincessPheverAvenue.Components
 {
     public class SoapboxKart : MiddleForwardVehicle
     {

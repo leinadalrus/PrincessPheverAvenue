@@ -51,7 +51,7 @@ namespace PrincessPheverAvenue
                 Exit();
 
             // TODO: Add your update logic here
-            PlayerController.UpdateController(gameTime, playerVehiclePosition, playerVehicleSpeed);
+            PlayerVehicleController.UpdateController(gameTime, playerVehiclePosition, playerVehicleSpeed);
 
             if (playerVehicleHitbox.X > _graphics.PreferredBackBufferWidth - playerVehicleSprite.Width / 2)
             {
