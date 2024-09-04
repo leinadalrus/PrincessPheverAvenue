@@ -1,4 +1,4 @@
-namespace PrincessPheverAvenue.Utilities
+namespace PrincessPheverAvenue.Functions
 {
     public class Node
     {

@@ -1,6 +1,6 @@
 ﻿namespace PrincessPheverAvenue.Enums
 {
-    public enum EWorldBuilding
+    public enum EAvenueBuildings
     {
         FOREGROUND_BUILDING,
         MIDGROUND_BUILDING,
