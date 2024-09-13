@@ -1,11 +1,14 @@
+using System;
+using System.Collections.Generic;
+
 namespace PrincessPheverAvenue.Functions
 {
     public class Node
     {
         public int Key { get; set; }
         public int Index { get; set; }
-        public int Next { get; set; }
-        public int Previous { get; set; }
+        public Node Next { get; set; }
+        public Node Previous { get; set; }
 
         public Node(int key, int index)
         {
@@ -23,7 +26,7 @@ namespace PrincessPheverAvenue.Functions
         Dictionary<int, Node> cache;
         Node left, right;
 
-        public static LRUCache(int nCapacity)
+        public LRUCache(int nCapacity)
         {
             capacity = nCapacity;
             cache = new Dictionary<int, Node>();
@@ -48,7 +51,7 @@ namespace PrincessPheverAvenue.Functions
             previously.Next = node; // We are inserting a new node right-ways.
             node.Previous = previously; // Markerstone of where our latest is.
             node.Next = right; // Cache cursor pointer moves.
-            right.Previously = node; // What is to the left of the cursor.
+            right.Previous = node; // What is to the left of the cursor.
         }
 
         public int Get(int key)
@@ -56,8 +59,8 @@ namespace PrincessPheverAvenue.Functions
             if (cache.ContainsKey(key))
             {
                 Node node = cache[key];
-                remove(Node);
-                insert(Node);
+                remove(node);
+                insert(node);
                 return node.Index;
             }
 
