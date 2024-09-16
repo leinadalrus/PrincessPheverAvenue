@@ -14,24 +14,24 @@ namespace PrincessPheverAvenue
         private readonly GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
 
-        Texture2D playerVehicleSprite;
-        Rectangle playerVehicleHitbox;
-        Vector2 playerVehiclePosition;
-        Single /* float */ playerVehicleSpeed;
+        Texture2D gftoSprite;
+        Rectangle gftoCollision;
+        Vector2 gftoPosition;
+        Single /* float */ gftoSpeed;
 
         public PrincessPheverAvenue()
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
-            IsMouseVisible = false;
+            IsMouseVisible = true;
         }
 
         protected override void Initialize()
         {
             // TODO: Add your initialization logic here
-            playerVehiclePosition = new Vector2(_graphics.PreferredBackBufferWidth / 2,
+            gftoPosition = new Vector2(_graphics.PreferredBackBufferWidth / 2,
                 _graphics.PreferredBackBufferHeight / 2);
-            playerVehicleSpeed = 100.1f; // 100.0f as-is: 100% in my context.
+            gftoSpeed = 100.1f; // 100.0f as-is: 100% in my context.
 
             base.Initialize();
         }
@@ -41,7 +41,7 @@ namespace PrincessPheverAvenue
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
             // TODO: use this.Content to load your game content here
-            playerVehicleSprite = Content.Load<Texture2D>("Starlight-Spacestar-Idle-Rear");
+            gftoSprite = Content.Load<Texture2D>("Mirage-Idle");
         }
 
         protected override void Update(GameTime gameTime)
@@ -51,22 +51,46 @@ namespace PrincessPheverAvenue
 
             // TODO: Add your update logic here
 
-            if (playerVehicleHitbox.X > _graphics.PreferredBackBufferWidth - playerVehicleSprite.Width / 2)
+            float nuSpeed = gftoSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            var keyboardState = Keyboard.GetState();
+
+            if (keyboardState.IsKeyDown(Keys.W))
             {
-                playerVehicleHitbox.X = _graphics.PreferredBackBufferWidth - playerVehicleSprite.Width / 2;
-            }
-            else if (playerVehicleHitbox.X < playerVehicleSprite.Width / 2)
-            {
-                playerVehicleHitbox.X = playerVehicleSprite.Width / 2;
+                gftoPosition.Y -= nuSpeed;
             }
 
-            if (playerVehicleHitbox.Y > _graphics.PreferredBackBufferHeight - playerVehicleSprite.Height / 2)
+            if (keyboardState.IsKeyDown(Keys.A))
             {
-                playerVehicleHitbox.Y = _graphics.PreferredBackBufferHeight - playerVehicleSprite.Height / 2;
+                gftoPosition.X -= nuSpeed;
             }
-            else if (playerVehicleHitbox.Y < playerVehicleSprite.Height / 2)
+
+            if (keyboardState.IsKeyDown(Keys.S))
             {
-                playerVehicleHitbox.Y = playerVehicleSprite.Height / 2;
+                gftoPosition.Y += nuSpeed;
+            }
+
+            if (keyboardState.IsKeyDown(Keys.D))
+            {
+                gftoPosition.X += nuSpeed;
+            }
+
+            if (gftoCollision.X > _graphics.PreferredBackBufferWidth - gftoSprite.Width / 2)
+            {
+                gftoCollision.X = _graphics.PreferredBackBufferWidth - gftoSprite.Width / 2;
+            }
+            else if (gftoCollision.X < gftoSprite.Width / 2)
+            {
+                gftoCollision.X = gftoSprite.Width / 2;
+            }
+
+            if (gftoCollision.Y > _graphics.PreferredBackBufferHeight - gftoSprite.Height / 2)
+            {
+                gftoCollision.Y = _graphics.PreferredBackBufferHeight - gftoSprite.Height / 2;
+            }
+            else if (gftoCollision.Y < gftoSprite.Height / 2)
+            {
+                gftoCollision.Y = gftoSprite.Height / 2;
             }
 
             base.Update(gameTime);
@@ -78,13 +102,13 @@ namespace PrincessPheverAvenue
 
             // TODO: Add your drawing code here
             _spriteBatch.Begin();
-            _spriteBatch.Draw(playerVehicleSprite,
-                playerVehiclePosition,
+            _spriteBatch.Draw(gftoSprite,
+                gftoPosition,
                 null,
                 Color.GhostWhite,
                 0.0f,
-                new Vector2(playerVehicleSprite.Width / 2,
-                            playerVehicleSprite.Height / 2),
+                new Vector2(gftoSprite.Width / 5,
+                            gftoSprite.Height / 4),
                 Vector2.One,
                 SpriteEffects.None,
                 0.0f);
