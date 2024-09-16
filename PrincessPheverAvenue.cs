@@ -5,7 +5,6 @@ using Microsoft.Xna.Framework.Input;
 using System;
 
 // My used packages
-using PrincessPheverAvenue.Controllers;
 #endregion
 
 namespace PrincessPheverAvenue
@@ -51,7 +50,6 @@ namespace PrincessPheverAvenue
                 Exit();
 
             // TODO: Add your update logic here
-            PlayerVehicleController.UpdateController(gameTime, playerVehiclePosition, playerVehicleSpeed);
 
             if (playerVehicleHitbox.X > _graphics.PreferredBackBufferWidth - playerVehicleSprite.Width / 2)
             {
