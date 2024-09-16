@@ -19,6 +19,8 @@ namespace PrincessPheverAvenue
         Vector2 gftoPosition;
         Single /* float */ gftoSpeed;
 
+        int deadZone = 4096;
+
         public PrincessPheverAvenue()
         {
             _graphics = new GraphicsDeviceManager(this);
@@ -73,6 +75,32 @@ namespace PrincessPheverAvenue
             if (keyboardState.IsKeyDown(Keys.D))
             {
                 gftoPosition.X += nuSpeed;
+            }
+
+            // NOTE(Gamepad): Gamepad logic
+            if (Joystick.LastConnectedIndex == 0)
+            {
+                var joystickState = Joystick.GetState((int)PlayerIndex.One);
+
+                if (joystickState.Axes[1] < -deadZone)
+                {
+                    gftoPosition.Y -= nuSpeed;
+                }
+
+                if (joystickState.Axes[1] > deadZone)
+                {
+                    gftoPosition.Y += nuSpeed;
+                }
+
+                if (joystickState.Axes[0] < -deadZone)
+                {
+                    gftoPosition.X -= nuSpeed;
+                }
+
+                if (joystickState.Axes[0] > deadZone)
+                {
+                    gftoPosition.X += nuSpeed;
+                }
             }
 
             if (gftoCollision.X > _graphics.PreferredBackBufferWidth - gftoSprite.Width / 2)
