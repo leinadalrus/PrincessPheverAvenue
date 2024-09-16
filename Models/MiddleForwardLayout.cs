@@ -4,7 +4,7 @@ using System;
 namespace PrincessPheverAvenue.Models
 {
     // NOTE(Daniel): Class: Box2D.
-    public class MiddleForwardVehicle
+    public class MiddleForwardLayout
     {
         public Vector2 Position,
                        Velocity,
@@ -25,7 +25,7 @@ namespace PrincessPheverAvenue.Models
 
         // NOTE(Daniel): Collision obstacles can interface-soft-copy this-
         // -Box2D imitation class.
-        public MiddleForwardVehicle()
+        public MiddleForwardLayout()
         {
             Position = Vector2.Zero;
             Velocity = Vector2.Zero;

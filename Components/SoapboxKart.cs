@@ -5,7 +5,7 @@ using System;
 
 namespace PrincessPheverAvenue.Components
 {
-    public class SoapboxKart : MiddleForwardVehicle
+    public class SoapboxKart : MiddleForwardLayout
     {
         public SoapboxKart() : base() { }
 
