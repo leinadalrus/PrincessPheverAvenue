@@ -9,6 +9,42 @@ using System;
 
 namespace PrincessPheverAvenue
 {
+    class PhysicsShape { }
+
+    class PhysicsBody
+    {
+        public UInt32   id;
+        public Boolean  enabled;
+        public Vector2  position,
+                        velocity,
+                        force;
+        public Single   angularVelocity,
+                        torque,
+                        orient,
+                        staticFriction,
+                        dyanmicFriction,
+                        restitution;
+        public Boolean  useGravity,
+                        isGrounded,
+                        freezeOrient;
+        public PhysicsShape shape;
+
+        public PhysicsBody() { }
+    }
+
+    class AvenueBuilding : PhysicsBody
+    {
+        public AvenueBuilding() : base()
+        {
+            id = 0;
+            enabled = false;
+            position.X = 0;
+            position.Y = 0;
+            orient = 0.0f;
+            isGrounded = false;
+        }
+    }
+
     public class PrincessPheverAvenue : Game
     {
         private readonly GraphicsDeviceManager _graphics;
