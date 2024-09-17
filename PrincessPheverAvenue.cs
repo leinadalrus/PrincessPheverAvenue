@@ -9,7 +9,61 @@ using System;
 
 namespace PrincessPheverAvenue
 {
-    class PhysicsShape { }
+    class ZigEncounter
+    {
+        public Int32    id;
+        public Vector3  currentPosition,
+                        lastPosition,
+                        velocityFromDistance;
+
+        public Model        model;
+        public Texture2D    texture;
+
+        public void MoveOntowards()
+        {
+            lastPosition = currentPosition;
+            currentPosition += velocityFromDistance;
+        }
+
+        public void CollisionRebound()
+        {
+            currentPosition -= velocityFromDistance;
+        }
+
+        public void InverseVelocity()
+        {
+            velocityFromDistance.X = -velocityFromDistance.X;
+            velocityFromDistance.Y = +velocityFromDistance.Y;
+        }
+
+        static void NoclipCheck(ref ZigEncounter a0, ref ZigEncounter b1)
+        {
+            for (int i = 0; i < a0.model.Meshes.Count; i++)
+            {
+                BoundingSphere boundingSphereA0 = a0.model.Meshes[i].BoundingSphere;
+                boundingSphereA0.Center += a0.currentPosition;
+
+                for (int j = 0; j < b1.model.Meshes.Count; j++)
+                {
+                    BoundingSphere boundingSphereB1 = b1.model.Meshes[j].BoundingSphere;
+                    boundingSphereB1.Center += b1.currentPosition;
+
+                    if (boundingSphereA0.Intersects(boundingSphereB1))
+                    {
+                        b1.InverseVelocity();
+                        a0.CollisionRebound();
+                        a0.InverseVelocity();
+                    }
+                }
+            }
+        }
+    }
+
+    class PhysicsShape
+    {
+        public Single   size;
+        public Int32    sides;
+    }
 
     class PhysicsBody
     {
@@ -32,16 +86,22 @@ namespace PrincessPheverAvenue
         public PhysicsBody() { }
     }
 
-    class AvenueBuilding : PhysicsBody
+    class AvenueBuilding : ZigEncounter
     {
         public AvenueBuilding() : base()
         {
             id = 0;
-            enabled = false;
-            position.X = 0;
-            position.Y = 0;
-            orient = 0.0f;
-            isGrounded = false;
+            currentPosition.X = 0;
+            currentPosition.Y = 0;
+
+            lastPosition.X = currentPosition.X;
+            lastPosition.Y = currentPosition.Y;
+
+            velocityFromDistance.X = 0;
+            velocityFromDistance.Y = 0;
+
+            model = null;
+            texture = null;
         }
     }
 
@@ -88,29 +148,40 @@ namespace PrincessPheverAvenue
                 Exit();
 
             // TODO: Add your update logic here
-
-            float nuSpeed = gftoSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
-
             var keyboardState = Keyboard.GetState();
 
-            if (keyboardState.IsKeyDown(Keys.W))
+            Vector2 zeroVectorDirection = Vector2.Zero;
+            zeroVectorDirection.Normalize();
+
+            float nuSpeed = gftoSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            Vector2 nuPosition = +nuSpeed * zeroVectorDirection;
+
+            if (keyboardState.IsKeyDown(Keys.W)
+                || keyboardState.IsKeyDown(Keys.Up))
             {
                 gftoPosition.Y -= nuSpeed;
+                zeroVectorDirection.Y -= nuSpeed;
             }
 
-            if (keyboardState.IsKeyDown(Keys.A))
+            if (keyboardState.IsKeyDown(Keys.A)
+                || keyboardState.IsKeyDown(Keys.Left))
             {
                 gftoPosition.X -= nuSpeed;
+                zeroVectorDirection.X -= nuSpeed;
             }
 
-            if (keyboardState.IsKeyDown(Keys.S))
+            if (keyboardState.IsKeyDown(Keys.S)
+                || keyboardState.IsKeyDown(Keys.Down))
             {
                 gftoPosition.Y += nuSpeed;
+                zeroVectorDirection.Y += nuSpeed;
             }
 
-            if (keyboardState.IsKeyDown(Keys.D))
+            if (keyboardState.IsKeyDown(Keys.D)
+                || keyboardState.IsKeyDown(Keys.Right))
             {
                 gftoPosition.X += nuSpeed;
+                zeroVectorDirection.X += nuSpeed;
             }
 
             // NOTE(Gamepad): Gamepad logic
