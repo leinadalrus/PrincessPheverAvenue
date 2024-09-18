@@ -117,6 +117,28 @@ namespace PrincessPheverAvenue
             return (float)Math.Sin((fn * Math.PI) / 2);
         }
 
+        Single _easeInElastic(float fn)
+        {
+            const float d = (float)((2 * Math.PI) / 3);
+
+            return (float)(fn == 0
+                ? 0
+                : fn == 1
+                ? 1
+                : -Math.Pow(2, 10 * fn - 10) * Math.Sin((fn * 10 - 10.75) * d));
+        }
+
+        Single _easeOutElastic(float fn)
+        {
+            const float d = (float)(2 * Math.PI) / 3;
+
+            return (float)(fn == 0
+                ? 0
+                : fn == 1
+                ? 1
+                : Math.Pow(2, -10 * fn) * Math.Sin((fn * 10 - 0.75) * d) + 1);
+        }
+
         readonly GraphicsDeviceManager _graphics;
         SpriteBatch _spriteBatch;
 
@@ -183,7 +205,7 @@ namespace PrincessPheverAvenue
             if (keyboardState.IsKeyDown(Keys.S)
                 || keyboardState.IsKeyDown(Keys.Down))
             {
-                gftoPosition.Y += _easeOutSine(nuSpeed);
+                gftoPosition.Y += _easeOutElastic(nuSpeed);
                 zeroVectorDirection.Y += nuSpeed;
             }
 
@@ -206,7 +228,7 @@ namespace PrincessPheverAvenue
 
                 if (joystickState.Axes[1] > deadZone)
                 {
-                    gftoPosition.Y += _easeInCosine(nuSpeed);
+                    gftoPosition.Y += _easeOutElastic(nuSpeed);
                 }
 
                 if (joystickState.Axes[0] < -deadZone)
