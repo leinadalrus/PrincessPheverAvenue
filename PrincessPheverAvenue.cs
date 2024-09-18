@@ -9,12 +9,15 @@ using System;
 
 namespace PrincessPheverAvenue
 {
-    class ZigEncounter
+    class CollisionShape
     {
         public Int32    id;
         public Vector3  currentPosition,
                         lastPosition,
                         velocityFromDistance;
+
+        public Single   size;
+        public Int32    sides;
 
         public Model        model;
         public Texture2D    texture;
@@ -36,7 +39,7 @@ namespace PrincessPheverAvenue
             velocityFromDistance.Y = +velocityFromDistance.Y;
         }
 
-        static void NoclipCheck(ref ZigEncounter a0, ref ZigEncounter b1)
+        static void NoclipCheck(ref CollisionShape a0, ref CollisionShape b1)
         {
             for (int i = 0; i < a0.model.Meshes.Count; i++)
             {
@@ -59,11 +62,6 @@ namespace PrincessPheverAvenue
         }
     }
 
-    class PhysicsShape
-    {
-        public Single   size;
-        public Int32    sides;
-    }
 
     class PhysicsBody
     {
@@ -81,12 +79,12 @@ namespace PrincessPheverAvenue
         public Boolean  useGravity,
                         isGrounded,
                         freezeOrient;
-        public PhysicsShape shape;
+        public CollisionShape shape;
 
         public PhysicsBody() { }
     }
 
-    class AvenueBuilding : ZigEncounter
+    class AvenueBuilding : CollisionShape
     {
         public AvenueBuilding() : base()
         {
@@ -102,6 +100,9 @@ namespace PrincessPheverAvenue
 
             model = null;
             texture = null;
+
+            size = 1.0f;
+            sides = 4;
         }
     }
 
@@ -142,10 +143,10 @@ namespace PrincessPheverAvenue
         readonly GraphicsDeviceManager _graphics;
         SpriteBatch _spriteBatch;
 
-        Texture2D gftoSprite;
-        Rectangle gftoCollision;
-        Vector2 gftoPosition;
-        Single /* float */ gftoSpeed;
+        Texture2D ftoSprite;
+        Rectangle ftoCollision;
+        Vector2 ftoPosition;
+        Single /* float */ ftoSpeed;
 
         int deadZone = 4096;
 
@@ -159,9 +160,9 @@ namespace PrincessPheverAvenue
         protected override void Initialize()
         {
             // TODO: Add your initialization logic here
-            gftoPosition = new Vector2(_graphics.PreferredBackBufferWidth / 2,
+            ftoPosition = new Vector2(_graphics.PreferredBackBufferWidth / 2,
                 _graphics.PreferredBackBufferHeight / 2);
-            gftoSpeed = 100.1f; // 100.0f as-is: 100% in my context.
+            ftoSpeed = 100.1f; // 100.0f as-is: 100% in my context.
 
             base.Initialize();
         }
@@ -171,7 +172,7 @@ namespace PrincessPheverAvenue
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
             // TODO: use this.Content to load your game content here
-            gftoSprite = Content.Load<Texture2D>("Mirage-Idle");
+            ftoSprite = Content.Load<Texture2D>("Mirage-Idle");
         }
 
         protected override void Update(GameTime gameTime)
@@ -185,34 +186,34 @@ namespace PrincessPheverAvenue
             Vector2 zeroVectorDirection = Vector2.Zero;
             zeroVectorDirection.Normalize();
 
-            Single nuSpeed = gftoSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            Single nuSpeed = ftoSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
             Vector2 nuPosition = +nuSpeed * zeroVectorDirection;
 
             if (keyboardState.IsKeyDown(Keys.W)
                 || keyboardState.IsKeyDown(Keys.Up))
             {
-                gftoPosition.Y -= _easeInCosine(nuSpeed);
+                ftoPosition.Y -= _easeInCosine(nuSpeed);
                 zeroVectorDirection.Y -= nuSpeed;
             }
 
             if (keyboardState.IsKeyDown(Keys.A)
                 || keyboardState.IsKeyDown(Keys.Left))
             {
-                gftoPosition.X -= _easeOutSine(nuSpeed);
+                ftoPosition.X -= _easeOutSine(nuSpeed);
                 zeroVectorDirection.X -= nuSpeed;
             }
 
             if (keyboardState.IsKeyDown(Keys.S)
                 || keyboardState.IsKeyDown(Keys.Down))
             {
-                gftoPosition.Y += _easeOutElastic(nuSpeed);
+                ftoPosition.Y += _easeOutElastic(nuSpeed);
                 zeroVectorDirection.Y += nuSpeed;
             }
 
             if (keyboardState.IsKeyDown(Keys.D)
                 || keyboardState.IsKeyDown(Keys.Right))
             {
-                gftoPosition.X += _easeOutSine(nuSpeed);
+                ftoPosition.X += _easeOutSine(nuSpeed);
                 zeroVectorDirection.X += nuSpeed;
             }
 
@@ -223,41 +224,41 @@ namespace PrincessPheverAvenue
 
                 if (joystickState.Axes[1] < -deadZone)
                 {
-                    gftoPosition.Y -= _easeInCosine(nuSpeed);
+                    ftoPosition.Y -= _easeInCosine(nuSpeed);
                 }
 
                 if (joystickState.Axes[1] > deadZone)
                 {
-                    gftoPosition.Y += _easeOutElastic(nuSpeed);
+                    ftoPosition.Y += _easeOutElastic(nuSpeed);
                 }
 
                 if (joystickState.Axes[0] < -deadZone)
                 {
-                    gftoPosition.X -= _easeOutSine(nuSpeed);
+                    ftoPosition.X -= _easeOutSine(nuSpeed);
                 }
 
                 if (joystickState.Axes[0] > deadZone)
                 {
-                    gftoPosition.X += _easeOutSine(nuSpeed);
+                    ftoPosition.X += _easeOutSine(nuSpeed);
                 }
             }
 
-            if (gftoCollision.X > _graphics.PreferredBackBufferWidth - gftoSprite.Width / 2)
+            if (ftoCollision.X > _graphics.PreferredBackBufferWidth - ftoSprite.Width / 2)
             {
-                gftoCollision.X = _graphics.PreferredBackBufferWidth - gftoSprite.Width / 2;
+                ftoCollision.X = _graphics.PreferredBackBufferWidth - ftoSprite.Width / 2;
             }
-            else if (gftoCollision.X < gftoSprite.Width / 2)
+            else if (ftoCollision.X < ftoSprite.Width / 2)
             {
-                gftoCollision.X = gftoSprite.Width / 2;
+                ftoCollision.X = ftoSprite.Width / 2;
             }
 
-            if (gftoCollision.Y > _graphics.PreferredBackBufferHeight - gftoSprite.Height / 2)
+            if (ftoCollision.Y > _graphics.PreferredBackBufferHeight - ftoSprite.Height / 2)
             {
-                gftoCollision.Y = _graphics.PreferredBackBufferHeight - gftoSprite.Height / 2;
+                ftoCollision.Y = _graphics.PreferredBackBufferHeight - ftoSprite.Height / 2;
             }
-            else if (gftoCollision.Y < gftoSprite.Height / 2)
+            else if (ftoCollision.Y < ftoSprite.Height / 2)
             {
-                gftoCollision.Y = gftoSprite.Height / 2;
+                ftoCollision.Y = ftoSprite.Height / 2;
             }
 
             base.Update(gameTime);
@@ -269,13 +270,13 @@ namespace PrincessPheverAvenue
 
             // TODO: Add your drawing code here
             _spriteBatch.Begin();
-            _spriteBatch.Draw(gftoSprite,
-                gftoPosition,
+            _spriteBatch.Draw(ftoSprite,
+                ftoPosition,
                 null,
                 Color.GhostWhite,
                 0.0f,
-                new Vector2(gftoSprite.Width / 5,
-                            gftoSprite.Height / 4),
+                new Vector2(ftoSprite.Width / 5,
+                            ftoSprite.Height / 4),
                 Vector2.One,
                 SpriteEffects.None,
                 0.0f);
