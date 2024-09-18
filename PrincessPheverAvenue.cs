@@ -107,8 +107,18 @@ namespace PrincessPheverAvenue
 
     public class PrincessPheverAvenue : Game
     {
-        private readonly GraphicsDeviceManager _graphics;
-        private SpriteBatch _spriteBatch;
+        Single _easeInCosine(float fn)
+        {
+            return (float)(1 - Math.Cos((fn * Math.PI) / 2));
+        }
+
+        Single _easeOutSine(float fn)
+        {
+            return (float)Math.Sin((fn * Math.PI) / 2);
+        }
+
+        readonly GraphicsDeviceManager _graphics;
+        SpriteBatch _spriteBatch;
 
         Texture2D gftoSprite;
         Rectangle gftoCollision;
@@ -153,34 +163,34 @@ namespace PrincessPheverAvenue
             Vector2 zeroVectorDirection = Vector2.Zero;
             zeroVectorDirection.Normalize();
 
-            float nuSpeed = gftoSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            Single nuSpeed = gftoSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
             Vector2 nuPosition = +nuSpeed * zeroVectorDirection;
 
             if (keyboardState.IsKeyDown(Keys.W)
                 || keyboardState.IsKeyDown(Keys.Up))
             {
-                gftoPosition.Y -= nuSpeed;
+                gftoPosition.Y -= _easeInCosine(nuSpeed);
                 zeroVectorDirection.Y -= nuSpeed;
             }
 
             if (keyboardState.IsKeyDown(Keys.A)
                 || keyboardState.IsKeyDown(Keys.Left))
             {
-                gftoPosition.X -= nuSpeed;
+                gftoPosition.X -= _easeOutSine(nuSpeed);
                 zeroVectorDirection.X -= nuSpeed;
             }
 
             if (keyboardState.IsKeyDown(Keys.S)
                 || keyboardState.IsKeyDown(Keys.Down))
             {
-                gftoPosition.Y += nuSpeed;
+                gftoPosition.Y += _easeOutSine(nuSpeed);
                 zeroVectorDirection.Y += nuSpeed;
             }
 
             if (keyboardState.IsKeyDown(Keys.D)
                 || keyboardState.IsKeyDown(Keys.Right))
             {
-                gftoPosition.X += nuSpeed;
+                gftoPosition.X += _easeOutSine(nuSpeed);
                 zeroVectorDirection.X += nuSpeed;
             }
 
@@ -191,22 +201,22 @@ namespace PrincessPheverAvenue
 
                 if (joystickState.Axes[1] < -deadZone)
                 {
-                    gftoPosition.Y -= nuSpeed;
+                    gftoPosition.Y -= _easeInCosine(nuSpeed);
                 }
 
                 if (joystickState.Axes[1] > deadZone)
                 {
-                    gftoPosition.Y += nuSpeed;
+                    gftoPosition.Y += _easeInCosine(nuSpeed);
                 }
 
                 if (joystickState.Axes[0] < -deadZone)
                 {
-                    gftoPosition.X -= nuSpeed;
+                    gftoPosition.X -= _easeOutSine(nuSpeed);
                 }
 
                 if (joystickState.Axes[0] > deadZone)
                 {
-                    gftoPosition.X += nuSpeed;
+                    gftoPosition.X += _easeOutSine(nuSpeed);
                 }
             }
 
