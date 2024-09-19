@@ -12,6 +12,10 @@ namespace PrincessPheverAvenue
 {
     enum ETerrains
     {
+        None,
+        Road,
+        Gravel,
+        Cobble,
         Crest,
         Unseen,
         Deceptive,
@@ -101,28 +105,6 @@ namespace PrincessPheverAvenue
         public CollisionShape shape;
 
         public PhysicsBody() { }
-    }
-
-    class AvenueBuilding : CollisionShape
-    {
-        public AvenueBuilding() : base()
-        {
-            id = 0;
-            currentPosition.X = 0;
-            currentPosition.Y = 0;
-
-            lastPosition.X = currentPosition.X;
-            lastPosition.Y = currentPosition.Y;
-
-            velocityFromDistance.X = 0;
-            velocityFromDistance.Y = 0;
-
-            model = null;
-            texture = null;
-
-            size = 1.0f;
-            sides = 4;
-        }
     }
 
     public class PrincessPheverAvenue : Game
@@ -231,6 +213,63 @@ namespace PrincessPheverAvenue
 
                 // Else:
                 return false;
+            }
+        }
+
+        class AvenueBuilding : CollisionShape
+        {
+            public AvenueBuilding() : base()
+            {
+                id = 0;
+                currentPosition.X = 0;
+                currentPosition.Y = 0;
+
+                lastPosition.X = currentPosition.X;
+                lastPosition.Y = currentPosition.Y;
+
+                velocityFromDistance.X = 0;
+                velocityFromDistance.Y = 0;
+
+                model = null;
+                texture = null;
+
+                size = 1.0f;
+                sides = 4;
+            }
+        }
+
+        class TerrainProduct
+        {
+            public Int32 MovementCost { get; set; }
+            public Boolean IsWater { get; set; }
+            public ETerrains TerrainType { get; set; }
+
+            public TerrainProduct(int movementCost, bool isWater, ETerrains terrainType)
+            {
+                MovementCost = movementCost;
+                IsWater = isWater;
+                TerrainType = terrainType;
+            }
+        }
+
+        class WorldBuilder
+        {
+            ETerrains[,] terrains;
+
+            TerrainProduct  _dirt,
+                            _road,
+                            _water;
+
+            public WorldBuilder()
+            {
+                _dirt = new TerrainProduct(1, false, ETerrains.BadCamber);
+                _road = new TerrainProduct(1, false, ETerrains.Road);
+                _water = new TerrainProduct(1, true, ETerrains.WaterSplash);
+            }
+
+            void generateWorldTerrain()
+            {
+                // TODO: Procedural terrain generation algorithm.
             }
         }
 
