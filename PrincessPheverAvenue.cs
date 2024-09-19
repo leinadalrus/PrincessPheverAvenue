@@ -3,12 +3,31 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.Collections.Generic;
 
 // My used packages
 #endregion
 
 namespace PrincessPheverAvenue
 {
+    enum ETerrains
+    {
+        Crest,
+        Unseen,
+        Deceptive,
+        Over,
+        Bump,
+        Jump,
+        BadCamber,
+        Through,
+        Dip,
+        Narrow,
+        UpHill,
+        DownHill,
+        WaterSplash,
+        Chicane,
+    }
+
     class CollisionShape
     {
         public Int32    id;
@@ -108,6 +127,113 @@ namespace PrincessPheverAvenue
 
     public class PrincessPheverAvenue : Game
     {
+        class LinkNode
+        {   // Cyclic LRU Cache (Circle Buffer.)
+            public Int32 Key { get; set; }
+            public Int32 Index { get; set; }
+
+            public LinkNode Next { get; set; }
+            public LinkNode Previous { get; set; }
+
+            public LinkNode(int key = 0, int index = 0)
+            {
+                Key = key;
+                Index = index;
+
+                Next = null;
+                Previous = null;
+            }
+        }
+
+        class LfuCache
+        {
+            Int32 _size = 0;
+            Dictionary<Int32, LinkNode> _map = null;
+            LinkedList<Int32> _linke;
+            LinkNode _node;
+
+            public LfuCache(Int32 size)
+            {
+                _size = size;
+                _map = new(); // : "new Dictionary();"
+                _linke = new(); // : "new LinkedList();"
+                _node = null;
+            }
+
+            void remove(LinkNode node)
+            {
+                var tail = node.Previous;
+                var head = node.Next;
+
+                tail.Next = head;
+                head.Previous = tail;
+            }
+
+            void insert(LinkNode node)
+            {
+                var tail = _node.Previous;
+                tail.Next = node;
+                node.Previous = tail;
+                node.Next = _node;
+                _node.Previous = node;
+            }
+
+            public Int32 Get(int key)
+            {
+                if (_map.ContainsKey(key))
+                {
+                    LinkNode node = _map[key];
+
+                    remove(node);
+                    insert(node);
+
+                    return node.Index;
+                }
+
+                return -1;
+            }
+
+            public void Put(int key, int index)
+            {
+                if (_map.ContainsKey(key))
+                {
+                    remove(_map[key]);
+                }
+
+                var nu = new LinkNode(key, index);
+                _map[key] = nu;
+
+                insert(nu);
+
+                if (_map.Count > _size)
+                {
+                    var lfu = _node.Next;
+                    remove(lfu);
+
+                    _map.Remove(lfu.Key);
+                }
+            }
+
+            public Boolean HadCycled(LinkNode head)
+            {
+                LinkNode slowIndexed = head, fastIndexing = head;
+
+                while (fastIndexing != null && fastIndexing.Next != null)
+                {
+                    fastIndexing = fastIndexing.Next.Next;
+                    slowIndexed = slowIndexed.Next;
+
+                    if (slowIndexed.Equals(fastIndexing))
+                    {
+                        return true;
+                    }
+                }
+
+                // Else:
+                return false;
+            }
+        }
+
         Single _easeInCosine(float fn)
         {
             return (float)(1 - Math.Cos((fn * Math.PI) / 2));
