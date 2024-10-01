@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 // My used packages
 #endregion
@@ -13,7 +14,7 @@ namespace PrincessPheverAvenue
     enum ETerrains
     {
         None,
-        Road,
+        Tarmac,
         Gravel,
         Cobble,
         Crest,
@@ -34,16 +35,16 @@ namespace PrincessPheverAvenue
 
     class CollisionShape
     {
-        public Int32    id;
-        public Vector3  currentPosition,
+        public Int32 id;
+        public Vector3 currentPosition,
                         lastPosition,
                         velocityFromDistance;
 
-        public Single   size;
-        public Int32    sides;
+        public Single size;
+        public Int32 sides;
 
-        public Model        model;
-        public Texture2D    texture;
+        public Model model;
+        public Texture2D texture;
 
         public void MoveOntowards()
         {
@@ -88,18 +89,18 @@ namespace PrincessPheverAvenue
 
     class PhysicsBody
     {
-        public UInt32   id;
-        public Boolean  enabled;
-        public Vector2  position,
+        public UInt32 id;
+        public Boolean enabled;
+        public Vector2 position,
                         velocity,
                         force;
-        public Single   angularVelocity,
+        public Single angularVelocity,
                         torque,
                         orient,
                         staticFriction,
                         dyanmicFriction,
                         restitution;
-        public Boolean  useGravity,
+        public Boolean useGravity,
                         isGrounded,
                         freezeOrient;
         public CollisionShape shape;
@@ -216,6 +217,49 @@ namespace PrincessPheverAvenue
             }
         }
 
+        class BreadthFirstSearch
+        {
+            static Queue<Int32> _graphQueue = new();
+            public static Int32 SearchBreadthFirst(Int32 originId, Int32 distancedId)
+            {
+                _graphQueue.Append(originId);
+                _graphQueue.Append(distancedId);
+
+                for (var i = 0; i < originId; i++)
+                {
+                    for (var j = 0; j < distancedId; j++)
+                    {
+                        if (i == j)
+                        {
+                            _graphQueue.Dequeue();
+                        }
+
+                        if (i > originId || j > distancedId)
+                        {
+                            _graphQueue.Clear();
+                        }
+
+                        SearchBreadthFirst(i, j);
+                    }
+                }
+
+                return RestartGraphQueue();
+            }
+
+            public void SetGraphQueue(Queue<Int32> nuQueue, Int32 predecessorId, Int32 successorId)
+            {
+                _graphQueue = nuQueue;
+                _graphQueue.Append(predecessorId);
+                _graphQueue.Append(successorId);
+            }
+
+            public static Int32 RestartGraphQueue()
+            {
+                _graphQueue.Dequeue();
+                return _graphQueue.FirstOrDefault<Int32>();
+            }
+        }
+
         class AvenueBuilding : CollisionShape
         {
             public AvenueBuilding() : base()
@@ -256,14 +300,14 @@ namespace PrincessPheverAvenue
         {
             ETerrains[,] terrains;
 
-            TerrainProduct  _dirt,
+            TerrainProduct _dirt,
                             _road,
                             _water;
 
             public WorldBuilder()
             {
                 _dirt = new TerrainProduct(1, false, ETerrains.BadCamber);
-                _road = new TerrainProduct(1, false, ETerrains.Road);
+                _road = new TerrainProduct(1, false, ETerrains.Tarmac);
                 _water = new TerrainProduct(1, true, ETerrains.WaterSplash);
             }
 
