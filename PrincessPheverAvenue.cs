@@ -11,39 +11,17 @@ using System.Linq;
 
 namespace PrincessPheverAvenue
 {
-    enum ETerrains
-    {
-        None,
-        Tarmac,
-        Gravel,
-        Cobble,
-        Crest,
-        Unseen,
-        Deceptive,
-        Over,
-        Bump,
-        Jump,
-        BadCamber,
-        Through,
-        Dip,
-        Narrow,
-        UpHill,
-        DownHill,
-        WaterSplash,
-        Chicane,
-    }
-
     class CollisionShape
     {
-        public Int32 id;
-        public Vector3 currentPosition,
+        public Int32    id;
+        public Vector3  currentPosition,
                         lastPosition,
                         velocityFromDistance;
 
-        public Single size;
-        public Int32 sides;
+        public Single   size;
+        public Int32    sides;
 
-        public Model model;
+        public Model    model;
         public Texture2D texture;
 
         public void MoveOntowards()
@@ -86,27 +64,72 @@ namespace PrincessPheverAvenue
         }
     }
 
-
-    class PhysicsBody
+    class RacecarAnatomy
     {
-        public UInt32 id;
-        public Boolean enabled;
-        public Vector2 position,
+        public Vector3  position,
                         velocity,
                         force;
-        public Single angularVelocity,
+        public Single   angularVelocity,
                         torque,
                         orient,
+                        inertia,
+                        inverseInertia,
+                        mass,
+                        inverseMass,
                         staticFriction,
                         dyanmicFriction,
                         restitution;
-        public Boolean useGravity,
+        public Boolean  useGravity,
                         isGrounded,
                         freezeOrient;
-        public CollisionShape shape;
+        public CollisionShape collisionShape;
 
-        public PhysicsBody() { }
+        public RacecarAnatomy() { }
     }
+
+    class ThermodynamicsComponent
+    {
+        public Single   angularVelocity,
+                        torque,
+                        orient,
+                        inertia,
+                        inverseInertia,
+                        mass,
+                        inverseMass;
+    }
+
+    class AerodynamicsComponent
+    {
+        Single          staticFriction,
+                        dyanmicFriction,
+                        restitution;
+    }
+
+    class PowertrainComponent
+    {
+        public Vector3  position,
+                        velocity,
+                        force;
+    }
+
+    class ThermodynamicsRecord
+    {
+        public Int32 ID;
+        public String Code;
+    }
+
+    class AerodynamicsRecord
+    {
+        public Int32 ID;
+        public String Code;
+    }
+
+    class PowertrainRecord
+    {
+        public Int32 ID;
+        public String Code;
+    }
+
 
     public class PrincessPheverAvenue : Game
     {
@@ -282,41 +305,20 @@ namespace PrincessPheverAvenue
             }
         }
 
-        class TerrainProduct
+        Single _averageSpeed(float y1, float y0, float x1, float x0)
         {
-            public Int32 MovementCost { get; set; }
-            public Boolean IsWater { get; set; }
-            public ETerrains TerrainType { get; set; }
-
-            public TerrainProduct(int movementCost, bool isWater, ETerrains terrainType)
-            {
-                MovementCost = movementCost;
-                IsWater = isWater;
-                TerrainType = terrainType;
-            }
+            var totalDistance = y1 - y0;
+            var totalTime = x1 - x0;
+            return totalDistance / totalTime;
         }
 
-        class WorldBuilder
+        // Derivatives
+        Single _slopeSteepness(float rise, float run)
         {
-            ETerrains[,] terrains;
-
-            TerrainProduct _dirt,
-                            _road,
-                            _water;
-
-            public WorldBuilder()
-            {
-                _dirt = new TerrainProduct(1, false, ETerrains.BadCamber);
-                _road = new TerrainProduct(1, false, ETerrains.Tarmac);
-                _water = new TerrainProduct(1, true, ETerrains.WaterSplash);
-            }
-
-            void generateWorldTerrain()
-            {
-                // TODO: Procedural terrain generation algorithm.
-            }
+            return rise / run;
         }
 
+        // Limits
         Single _easeInCosine(float fn)
         {
             return (float)(1 - Math.Cos((fn * Math.PI) / 2));
