@@ -1,5 +1,6 @@
 ﻿#region Using Statements
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
@@ -349,6 +350,210 @@ namespace PrincessPheverAvenue
         }
     }
 
+    class CollisionBarrier : VehicleContext
+    {
+        public String BarrierType { get; set; }
+
+        public CollisionBarrier() : base()
+        {
+            BarrierType = null;
+        }
+
+        public void LoadContent(ContentManager content, String modelName)
+        {
+            Model = content.Load<Model>(modelName);
+            BarrierType = modelName;
+            Position = Vector3.Down;
+        }
+
+        public void Draw(Matrix view, Matrix projection)
+        {
+            Matrix translateMatrix = Matrix.CreateTranslation(Position);
+            Matrix worldMatrix = translateMatrix;
+
+            foreach (ModelMesh mesh in Model.Meshes)
+            {
+                foreach (BasicEffect effect in mesh.Effects)
+                {
+                    effect.World = worldMatrix;
+                    effect.View = view;
+                    effect.Projection = projection;
+
+                    effect.EnableDefaultLighting();
+                    effect.PreferPerPixelLighting = true;
+                }
+
+                mesh.Draw();
+            }
+        }
+    }
+
+    class PlayerVehicle : VehicleContext
+    {
+        const Single heightOffset = 2.0f;
+        const Int32 maxRange = 100;
+
+        Single velocity = 1.0f;
+        Single turnSpeed = 1.0f;
+
+        Vector3 startPosition = new(0.0f, heightOffset, 0);
+        public Single RadiansDirection { get; set; }
+        public Int32 RangeSize { get; set; }
+
+        public PlayerVehicle() : base()
+        {
+            Position = startPosition;
+            RadiansDirection = 0.0f;
+            RangeSize = maxRange;
+        }
+
+        Single _averageSpeed(float y1, float y0, float x1, float x0)
+        {
+            var totalDistance = y1 - y0;
+            var totalTime = x1 - x0;
+            return totalDistance / totalTime;
+        }
+
+        // Derivatives
+        Single _slopeSteepness(float rise, float run)
+        {
+            return rise / run;
+        }
+
+        // Limits
+        Single _easeInCosine(float fn)
+        {
+            return (float)(1 - Math.Cos((fn * Math.PI) / 2));
+        }
+
+        Single _easeOutSine(float fn)
+        {
+            return (float)Math.Sin((fn * Math.PI) / 2);
+        }
+
+        Single _easeInElastic(float fn)
+        {
+            const float d = (float)((2 * Math.PI) / 3);
+
+            return (float)(fn == 0
+                ? 0
+                : fn == 1
+                ? 1
+                : -Math.Pow(2, 10 * fn - 10) * Math.Sin((fn * 10 - 10.75) * d));
+        }
+
+        Single _easeOutElastic(float fn)
+        {
+            const float d = (float)(2 * Math.PI) / 3;
+
+            return (float)(fn == 0
+                ? 0
+                : fn == 1
+                ? 1
+                : Math.Pow(2, -10 * fn) * Math.Sin((fn * 10 - 0.75) * d) + 1);
+        }
+
+        Boolean validateMovement(Vector3 nextPosition, CollisionBarrier[] collisionBarriers)
+        {
+            if ((Math.Abs(nextPosition.X) > maxRange) || (Math.Abs(nextPosition.Z) > maxRange))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        public void LoadContent(ContentManager content, String modelName)
+        {
+            Model = content.Load<Model>(modelName);
+        }
+
+        public void Draw(Matrix view, Matrix projection)
+        {
+            Matrix worldMatrix = Matrix.Identity;
+            Matrix rotationMatrix = Matrix.CreateRotationY(RadiansDirection);
+            Matrix translateMatrix = Matrix.CreateTranslation(Position);
+
+            worldMatrix = rotationMatrix * translateMatrix;
+
+            foreach (ModelMesh mesh in Model.Meshes)
+            {
+                foreach (BasicEffect effect in mesh.Effects)
+                {
+                    effect.World = worldMatrix;
+                    effect.View = view;
+                    effect.Projection = projection;
+
+                    effect.EnableDefaultLighting();
+                    effect.PreferPerPixelLighting = true;
+                }
+
+                mesh.Draw();
+            }
+        }
+
+        public void Update(KeyboardState keyboardState, GamePadState gamepadState, CollisionBarrier[] collisionBarriers)
+        {
+            Single vSpeed = 100.0f;
+            Single turnSpeed = 50.0f;
+
+            Vector3 zeroedDirection = Vector3.Zero;
+            zeroedDirection.Normalize();
+
+            Vector3 vPosition = new();
+            Vector3 nuPosition = +vSpeed * zeroedDirection;
+
+            if (keyboardState.IsKeyDown(Keys.W)
+                || keyboardState.IsKeyDown(Keys.Up))
+            {
+                vPosition.Z = _easeInCosine(vSpeed);
+                zeroedDirection.Z = vSpeed;
+            }
+            if (keyboardState.IsKeyDown(Keys.A)
+                || keyboardState.IsKeyDown(Keys.Left))
+            {
+                turnSpeed = 1.0f;
+                vPosition.X -= _easeOutSine(turnSpeed);
+                zeroedDirection.X -= turnSpeed;
+            }
+            if (keyboardState.IsKeyDown(Keys.S)
+                || keyboardState.IsKeyDown(Keys.Down))
+            {
+                vPosition.Z = -_easeOutElastic(vSpeed);
+                zeroedDirection.Z = -vSpeed;
+            }
+            if (keyboardState.IsKeyDown(Keys.D)
+                || keyboardState.IsKeyDown(Keys.Right))
+            {
+                turnSpeed = -1.0f;
+                vPosition.X += _easeOutSine(turnSpeed);
+                zeroedDirection.X += turnSpeed;
+            }
+
+            // NOTE(Gamepad): Gamepad logic
+            if (gamepadState.ThumbSticks.Left.X != 0)
+            {
+                turnSpeed = -gamepadState.ThumbSticks.Left.X;
+            }
+            if (gamepadState.ThumbSticks.Left.Y != 0)
+            {
+                zeroedDirection.Z = gamepadState.ThumbSticks.Left.Y;
+            }
+
+            RadiansDirection += turnSpeed * this.turnSpeed;
+            Matrix orientationMatrix = Matrix.CreateRotationY(RadiansDirection);
+
+            var updatedSpeed = Vector3.Transform(zeroedDirection, orientationMatrix);
+            updatedSpeed *= this.velocity;
+            vPosition = Position + updatedSpeed;
+
+            if (validateMovement(vPosition, collisionBarriers))
+            {
+                Position = vPosition;
+            }
+        }
+    }
+
     public class PrincessPheverAvenue : Game
     {
         readonly GraphicsDeviceManager _graphics;
@@ -356,13 +561,22 @@ namespace PrincessPheverAvenue
         Texture2D mirageSprite;
 
         Rectangle mirageCollision;
-        Vector2 miragePosition;
+        Vector2 vPosition;
 
-        Single /* float */ mirageSpeed;
-        int deadZone = 4096;
+        Single /* float */ vSpeed;
 
         VehicleContext groundFloor;
         Camera3D primaryCamera;
+
+        PlayerVehicle playerVehicle;
+        CollisionBarrier[] collisionBarriers;
+
+        KeyboardState keyboardState = Keyboard.GetState();
+        KeyboardState previousKeyboardState = Keyboard.GetState();
+
+        GamePadState gamepadState = new();
+        GamePadState previousGamepadState = new();
+
 
         public PrincessPheverAvenue()
         {
@@ -439,9 +653,9 @@ namespace PrincessPheverAvenue
         protected override void Initialize()
         {
             // TODO: Add your initialization logic here
-            miragePosition = new Vector2(_graphics.PreferredBackBufferWidth / 2,
+            vPosition = new Vector2(_graphics.PreferredBackBufferWidth / 2,
                 _graphics.PreferredBackBufferHeight / 2);
-            mirageSpeed = 100.1f; // 100.0f as-is: 100% in my context.
+            vSpeed = 100.1f; // 100.0f as-is: 100% in my context.
 
             groundFloor = new();
             primaryCamera = new();
@@ -456,6 +670,18 @@ namespace PrincessPheverAvenue
             // TODO: use this.Content to load your game content here
             mirageSprite = Content.Load<Texture2D>("Mirage-Rear");
             groundFloor.Model = Content.Load<Model>("Models/TarmacBase");
+
+            for (var idx = 0; idx < 8; idx++)
+            {
+                collisionBarriers[idx] = new();
+                collisionBarriers[idx].LoadContent(Content, "Models/HouseFenceWithCulledBackface");
+                collisionBarriers[idx].Position = new(_graphics.PreferredBackBufferWidth / 4,
+                    _graphics.PreferredBackBufferHeight / 8,
+                    _graphics.PreferredBackBufferHeight);
+            }
+
+            playerVehicle = new();
+            playerVehicle.LoadContent(Content, "Models/vehicles/Mikazuki-GIV");
         }
 
         protected override void Update(GameTime gameTime)
@@ -464,89 +690,17 @@ namespace PrincessPheverAvenue
                 Exit();
 
             // TODO: Add your update logic here
-            var keyboardState = Keyboard.GetState();
+            previousKeyboardState = keyboardState;
+            keyboardState = Keyboard.GetState();
+
+            previousGamepadState = gamepadState;
+            gamepadState = GamePad.GetState(PlayerIndex.One);
 
             Single rotation = 0.0f;
             Vector3 position = Vector3.Zero;
+
+            playerVehicle.Update(keyboardState, gamepadState, collisionBarriers);
             primaryCamera.Update(position, rotation, _graphics.GraphicsDevice.Viewport.AspectRatio);
-
-            Vector2 zeroVectorDirection = Vector2.Zero;
-            zeroVectorDirection.Normalize();
-
-            Single nuSpeed = mirageSpeed * (float)gameTime.ElapsedGameTime.TotalSeconds;
-            Vector2 nuPosition = +nuSpeed * zeroVectorDirection;
-
-            if (keyboardState.IsKeyDown(Keys.W)
-                || keyboardState.IsKeyDown(Keys.Up))
-            {
-                miragePosition.Y -= _easeInCosine(nuSpeed);
-                zeroVectorDirection.Y -= nuSpeed;
-            }
-
-            if (keyboardState.IsKeyDown(Keys.A)
-                || keyboardState.IsKeyDown(Keys.Left))
-            {
-                miragePosition.X -= _easeOutSine(nuSpeed);
-                zeroVectorDirection.X -= nuSpeed;
-            }
-
-            if (keyboardState.IsKeyDown(Keys.S)
-                || keyboardState.IsKeyDown(Keys.Down))
-            {
-                miragePosition.Y += _easeOutElastic(nuSpeed);
-                zeroVectorDirection.Y += nuSpeed;
-            }
-
-            if (keyboardState.IsKeyDown(Keys.D)
-                || keyboardState.IsKeyDown(Keys.Right))
-            {
-                miragePosition.X += _easeOutSine(nuSpeed);
-                zeroVectorDirection.X += nuSpeed;
-            }
-
-            // NOTE(Gamepad): Gamepad logic
-            if (Joystick.LastConnectedIndex == 0)
-            {
-                var joystickState = Joystick.GetState((int)PlayerIndex.One);
-
-                if (joystickState.Axes[1] < -deadZone)
-                {
-                    miragePosition.Y -= _easeInCosine(nuSpeed);
-                }
-
-                if (joystickState.Axes[1] > deadZone)
-                {
-                    miragePosition.Y += _easeOutElastic(nuSpeed);
-                }
-
-                if (joystickState.Axes[0] < -deadZone)
-                {
-                    miragePosition.X -= _easeOutSine(nuSpeed);
-                }
-
-                if (joystickState.Axes[0] > deadZone)
-                {
-                    miragePosition.X += _easeOutSine(nuSpeed);
-                }
-            }
-
-            if (mirageCollision.X > _graphics.PreferredBackBufferWidth - mirageSprite.Width / 2)
-            {
-                mirageCollision.X = _graphics.PreferredBackBufferWidth - mirageSprite.Width / 2;
-            }
-            else if (mirageCollision.X < mirageSprite.Width / 2)
-            {
-                mirageCollision.X = mirageSprite.Width / 2;
-            }
-
-            if (mirageCollision.Y > _graphics.PreferredBackBufferHeight - mirageSprite.Height / 2)
-            {
-                mirageCollision.Y = _graphics.PreferredBackBufferHeight - mirageSprite.Height / 2;
-            }
-            else if (mirageCollision.Y < mirageSprite.Height / 2)
-            {
-                mirageCollision.Y = mirageSprite.Height / 2;
-            }
 
             base.Update(gameTime);
         }
@@ -560,7 +714,7 @@ namespace PrincessPheverAvenue
 
             _spriteBatch.Begin();
             _spriteBatch.Draw(mirageSprite,
-                miragePosition,
+                vPosition,
                 null,
                 Color.GhostWhite,
                 0.0f,
@@ -572,6 +726,18 @@ namespace PrincessPheverAvenue
             _spriteBatch.End();
 
             base.Draw(gameTime);
+        }
+
+        void DrawMechanics()
+        {
+            DrawTerrain(groundFloor.Model);
+
+            foreach (var barrier in collisionBarriers)
+            {
+                barrier.Draw(primaryCamera.ViewMatrix, primaryCamera.ProjectionMatrix);
+            }
+
+            playerVehicle.Draw(primaryCamera.ViewMatrix, primaryCamera.ProjectionMatrix);
         }
     }
 }
