@@ -631,6 +631,38 @@ namespace PrincessPheverAvenue
                 : Math.Pow(2, -10 * fn) * Math.Sin((fn * 10 - 0.75) * d) + 1);
         }
 
+        void _emplaceBarrier()
+        {
+            var minimumDistance = sizeof(sbyte);
+            var maximumDistance  = sizeof(sbyte);
+            Vector3 temporaryOrigin = new();
+
+            foreach (var barrier in collisionBarriers)
+            {
+                barrier.Position = temporaryOrigin;
+                temporaryOrigin = barrier.BoundingSphere.Center;
+
+                temporaryOrigin.X = barrier.Position.X;
+                temporaryOrigin.Z = barrier.Position.Z;
+
+                barrier.BoundingSphere = new(temporaryOrigin, barrier.BoundingSphere.Radius);
+            }
+        }
+
+        Boolean NonVacanct(Int32 x, Int32 y, Int32 z)
+        {
+            foreach (var barrier in collisionBarriers)
+            {
+                if (((int)(MathHelper.Distance(x, barrier.Position.X)) < 15) &&
+                    (int)(MathHelper.Distance(z, barrier.Position.Z)) < 15)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         void DrawTerrain(Model model)
         {
             foreach (ModelMesh mesh in model.Meshes)
@@ -668,20 +700,18 @@ namespace PrincessPheverAvenue
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
             // TODO: use this.Content to load your game content here
-            mirageSprite = Content.Load<Texture2D>("Mirage-Rear");
-            groundFloor.Model = Content.Load<Model>("Models/TarmacBase");
-
-            for (var idx = 0; idx < 8; idx++)
-            {
-                collisionBarriers[idx] = new();
-                collisionBarriers[idx].LoadContent(Content, "Models/HouseFenceWithCulledBackface");
-                collisionBarriers[idx].Position = new(_graphics.PreferredBackBufferWidth / 4,
-                    _graphics.PreferredBackBufferHeight / 8,
-                    _graphics.PreferredBackBufferHeight);
-            }
 
             playerVehicle = new();
             playerVehicle.LoadContent(Content, "Models/vehicles/Mikazuki-GIV");
+
+            collisionBarriers = new CollisionBarrier[63];
+            for (var i = 0; i < collisionBarriers.Length; i++)
+            {
+                collisionBarriers[i] = new();
+                collisionBarriers[i].LoadContent(Content, "Models/buildings/Avenue-Building-Simplex");
+            }
+
+            _emplaceBarrier();
         }
 
         protected override void Update(GameTime gameTime)
@@ -712,7 +742,14 @@ namespace PrincessPheverAvenue
             // TODO: Add your drawing code here
             DrawTerrain(groundFloor.Model);
 
+            foreach (var collisionBar in collisionBarriers)
+            {
+                collisionBar.Draw(primaryCamera.ViewMatrix, primaryCamera.ProjectionMatrix);
+            }
+
+            // Begin spritesheet/texture drawings
             _spriteBatch.Begin();
+
             _spriteBatch.Draw(mirageSprite,
                 vPosition,
                 null,
@@ -723,6 +760,10 @@ namespace PrincessPheverAvenue
                 Vector2.One,
                 SpriteEffects.None,
                 0.0f);
+
+            playerVehicle.Draw(primaryCamera.ViewMatrix, primaryCamera.ProjectionMatrix);
+
+            // End spritesheet/texture drawings
             _spriteBatch.End();
 
             base.Draw(gameTime);
